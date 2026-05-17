@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Solvr">
+<title>Solvr — Calculate everything.</title>
+<link rel="manifest" id="manifest-link">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+:root {
+  /* Dark theme (default) */
+  --bg:           #0a0a0f;
+  --surface:      #13131a;
+  --surface-2:    #1c1c26;
+  --btn-num:      #181820;
+  --btn-op:       #221e36;
+  --btn-fn:       #171f2e;
+  --btn-eq:       #6c63ff;
+  --btn-eq-glow:  rgba(108,99,255,0.4);
+  --accent:       #6c63ff;
+  --accent-dim:   rgba(108,99,255,0.15);
+  --text-primary: #f0eff8;
+  --text-secondary: #8884a8;
+  --text-dim:     #4a4868;
+  --border:       rgba(255,255,255,0.06);
+  --border-light: rgba(255,255,255,0.1);
+  --nav-bg:       rgba(13,13,20,0.85);
+  --drawer-bg:    #13131a;
+  --input-bg:     #1c1c26;
+  --shadow:       0 8px 32px rgba(0,0,0,0.5);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.3);
+  --toast-bg:     #2a2838;
+
+  /* Spacing */
+  --gap-xs:  4px;
+  --gap-sm:  8px;
+  --gap-md:  12px;
+  --gap-lg:  16px;
+  --gap-xl:  20px;
+  --gap-2xl: 28px;
+
+  /* Radii */
+  --r-panel:  20px;
+  --r-btn:    14px;
+  --r-input:  10px;
+  --r-sm:     8px;
+
+  /* Animation durations */
+  --dur-btn:    60ms;
+  --dur-btn-out:120ms;
+  --dur-tab:    200ms;
+  --dur-drawer: 280ms;
+  --dur-result: 180ms;
+  --dur-theme:  300ms;
+
+  /* Nav height */
+  --nav-h: 72px;
+  --header-h: 56px;
+}
+
+[data-theme="light"] {
+  --bg:           #f5f4f0;
+  --surface:      #eceae4;
+  --surface-2:    #e2e0d8;
+  --btn-num:      #e8e6df;
+  --btn-op:       #dbd7cc;
+  --btn-fn:       #d8dae2;
+  --btn-eq:       #6c63ff;
+  --btn-eq-glow:  rgba(108,99,255,0.3);
+  --accent:       #6c63ff;
+  --accent-dim:   rgba(108,99,255,0.12);
+  --text-primary: #16141f;
+  --text-secondary: #5c5878;
+  --text-dim:     #9896b0;
+  --border:       rgba(0,0,0,0.07);
+  --border-light: rgba(0,0,0,0.12);
+  --nav-bg:       rgba(236,234,228,0.9);
+  --drawer-bg:    #eceae4;
+  --input-bg:     #e2e0d8;
+  --shadow:       0 8px 32px rgba(0,0,0,0.12);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+  --toast-bg:     #d8d6cf;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background var(--dur-theme), color var(--dur-theme);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button { font-family: 'Syne', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
+input  { font-family: 'Syne', sans-serif; outline: none; border: none; background: none; color: inherit; }
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gap-lg);
+  height: var(--header-h);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  transition: background var(--dur-theme), border-color var(--dur-theme);
+  position: relative;
+  z-index: 10;
+}
+
+#header-logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+#header-logo span { color: var(--accent); }
+
+#header-actions { display: flex; gap: var(--gap-md); align-items: center; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: background 0.15s, transform var(--dur-btn);
+  cursor: pointer;
+}
+.icon-btn:active { transform: scale(0.9); }
+.icon-btn:hover  { background: var(--accent-dim); }
+
+/* Tab content area */
+#content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.tab-panel {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--gap-lg) var(--gap-lg) calc(var(--nav-h) + var(--gap-lg));
+  opacity: 0;
+  transform: translateY(24px);
+  pointer-events: none;
+  transition: opacity var(--dur-tab), transform var(--dur-tab);
+  will-change: opacity, transform;
+  scrollbar-width: none;
+}
+.tab-panel::-webkit-scrollbar { display: none; }
+.tab-panel.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* Bottom nav */
+#bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  display: flex;
+  align-items: stretch;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  transition: background var(--dur-theme), border-color var(--dur-theme);
+}
+
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-bottom: 8px;
+  cursor: pointer;
+  transition: color 0.15s;
+  color: var(--text-dim);
+  position: relative;
+}
+.nav-tab.active { color: var(--accent); }
+.nav-tab .nav-icon { font-size: 20px; line-height: 1; }
+.nav-tab .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.nav-tab .tier-badge {
+  position: absolute;
+  top: 8px; right: calc(50% - 20px);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 1px 3px;
+  text-transform: uppercase;
+}
+.nav-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 32px; height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  transition: transform 0.2s;
+}
+.nav-tab.active::after { transform: translateX(-50%) scaleX(1); }
+
+/* ============================================================
+   CALCULATOR DISPLAY
+   ============================================================ */
+.calc-display {
+  background: var(--surface);
+  border-radius: var(--r-panel);
+  padding: var(--gap-lg) var(--gap-xl);
+  margin-bottom: var(--gap-md);
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid var(--border);
+  transition: background var(--dur-theme), border-color var(--dur-theme);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.display-expression {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-height: 18px;
+  word-break: break-all;
+  line-height: 1.4;
+  text-align: right;
+  white-space: pre-wrap;
+  transition: color var(--dur-theme);
+}
+
+.display-result {
+  font-family: 'DM Mono', monospace;
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--text-primary);
+  text-align: right;
+  line-height: 1.1;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--dur-theme);
+}
+.display-result.result-animate {
+  animation: resultPop var(--dur-result) ease-out;
+}
+@keyframes resultPop {
+  from { opacity: 0.3; transform: translateY(8px); }
+  to   { opacity: 1;   transform: translateY(0);   }
+}
+
+.display-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--gap-xs);
+}
+.angle-mode-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  user-select: none;
+}
+.memory-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: background 0.2s;
+}
+.memory-dot.active { background: var(--accent); }
+
+/* ============================================================
+   BUTTON GRID
+   ============================================================ */
+.calc-grid {
+  display: grid;
+  gap: var(--gap-sm);
+}
+.core-grid   { grid-template-columns: repeat(4, 1fr); }
+.basic-grid  { grid-template-columns: repeat(5, 1fr); }
+
+.calc-btn {
+  height: 64px;
+  border-radius: var(--r-btn);
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--btn-num);
+  color: var(--text-primary);
+  transition:
+    background var(--dur-theme),
+    border-color var(--dur-theme),
+    color var(--dur-theme),
+    transform var(--dur-btn) ease-in,
+    box-shadow var(--dur-btn) ease-in;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.calc-btn:active {
+  transform: scale(0.93);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  transition:
+    transform var(--dur-btn) ease-in,
+    box-shadow var(--dur-btn) ease-in;
+}
+.calc-btn.btn-op  { background: var(--btn-op);  font-size: 22px; color: var(--accent); }
+.calc-btn.btn-fn  { background: var(--btn-fn);  font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.calc-btn.btn-eq  {
+  background: var(--btn-eq);
+  color: #fff;
+  font-size: 26px;
+  box-shadow: 0 4px 20px var(--btn-eq-glow);
+  border-color: transparent;
+}
+.calc-btn.btn-eq:active { box-shadow: inset 0 2px 8px rgba(0,0,0,0.3); }
+.calc-btn.btn-clear { background: var(--btn-fn); color: #ff6b6b; }
+.calc-btn.span-2 { grid-column: span 2; }
+
+/* Memory row */
+.memory-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-sm);
+}
+.mem-btn {
+  height: 36px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mem-btn:active { background: var(--accent-dim); color: var(--accent); }
+
+/* Quick action row */
+.quick-row {
+  display: flex;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-sm);
+}
+.quick-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.quick-btn:active { background: var(--accent-dim); color: var(--accent); }
+
+/* INV toggle */
+.inv-active { background: var(--accent) !important; color: #fff !important; }
+
+/* ============================================================
+   PRO TAB — GRAPHING
+   ============================================================ */
+.graph-section {
+  background: var(--surface);
+  border-radius: var(--r-panel);
+  border: 1px solid var(--border);
+  margin-bottom: var(--gap-md);
+  overflow: hidden;
+  transition: background var(--dur-theme), border-color var(--dur-theme);
+}
+.graph-section-header {
+  padding: var(--gap-md) var(--gap-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.graph-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.graph-container {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  background: var(--bg);
+}
+#jxgbox {
+  width: 100%; height: 100%;
+}
+#canvas3d {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+.fn-list { padding: var(--gap-md) var(--gap-lg); display: flex; flex-direction: column; gap: var(--gap-sm); }
+.fn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+.fn-color-swatch {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.fn-input {
+  flex: 1;
+  height: 38px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-input);
+  padding: 0 var(--gap-md);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: border-color 0.15s, background var(--dur-theme);
+  user-select: text;
+}
+.fn-input:focus { border-color: var(--accent); outline: none; }
+.fn-delete {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fn-delete:hover { background: rgba(255,100,100,0.15); color: #ff6b6b; }
+
+.graph-controls {
+  display: flex;
+  gap: var(--gap-sm);
+  padding: 0 var(--gap-lg) var(--gap-md);
+  flex-wrap: wrap;
+}
+.ctrl-btn {
+  height: 32px;
+  padding: 0 var(--gap-md);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ctrl-btn:active, .ctrl-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* ============================================================
+   CONVERTER TAB
+   ============================================================ */
+.converter-cats {
+  display: flex;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-lg);
+}
+.cat-btn {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cat-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+.converter-panel {
+  background: var(--surface);
+  border-radius: var(--r-panel);
+  border: 1px solid var(--border);
+  padding: var(--gap-xl);
+  transition: background var(--dur-theme), border-color var(--dur-theme);
+}
+.conv-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-md);
+}
+.conv-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.conv-field {
+  display: flex;
+  gap: var(--gap-sm);
+}
+.conv-input {
+  flex: 1;
+  height: 48px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-input);
+  padding: 0 var(--gap-md);
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: var(--text-primary);
+  transition: border-color 0.15s, background var(--dur-theme);
+  user-select: text;
+}
+.conv-input:focus { border-color: var(--accent); }
+.conv-select {
+  height: 48px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-input);
+  padding: 0 var(--gap-md);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 100px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238884a8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color 0.15s, background var(--dur-theme);
+}
+.conv-select:focus { border-color: var(--accent); outline: none; }
+
+.swap-btn {
+  width: 100%;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 18px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin: var(--gap-xs) 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.swap-btn:active { background: var(--accent-dim); }
+
+/* ============================================================
+   DRAWERS & OVERLAYS
+   ============================================================ */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-drawer);
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer {
+  position: fixed;
+  bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 480px;
+  background: var(--drawer-bg);
+  border-radius: 24px 24px 0 0;
+  z-index: 201;
+  transition: transform var(--dur-drawer) cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+  border-top: 1px solid var(--border-light);
+  transition: transform var(--dur-drawer) cubic-bezier(0.16, 1, 0.3, 1), background var(--dur-theme), border-color var(--dur-theme);
+}
+.drawer::-webkit-scrollbar { display: none; }
+.drawer.open { transform: translateX(-50%) translateY(0); }
+
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  margin: var(--gap-md) auto var(--gap-sm);
+}
+.drawer-title {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 0 var(--gap-xl) var(--gap-md);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.drawer-body {
+  padding: 0 var(--gap-xl) var(--gap-2xl);
+}
+
+/* Settings rows */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-md) 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.setting-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Toggle switch */
+.toggle {
+  width: 44px; height: 26px;
+  background: var(--surface-2);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); border-color: transparent; }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle.on::after { transform: translateX(18px); background: #fff; }
+
+/* History items */
+.history-item {
+  padding: var(--gap-md) 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  border-radius: var(--r-sm);
+  padding-left: var(--gap-sm);
+  padding-right: var(--gap-sm);
+}
+.history-item:active { background: var(--accent-dim); }
+.history-expr { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-secondary); }
+.history-result { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--text-primary); margin-top: 2px; }
+
+/* Constants panel */
+.constant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-sm) var(--gap-sm);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: background 0.12s;
+}
+.constant-item:active { background: var(--accent-dim); }
+.constant-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.constant-desc { font-size: 11px; color: var(--text-secondary); }
+.constant-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); text-align: right; }
+
+/* Tip calculator */
+.tip-panel-inner { display: flex; flex-direction: column; gap: var(--gap-md); }
+.tip-input-group { display: flex; flex-direction: column; gap: var(--gap-xs); }
+.tip-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
+.tip-field {
+  height: 48px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-input);
+  padding: 0 var(--gap-md);
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: var(--text-primary);
+  width: 100%;
+  user-select: text;
+  transition: border-color 0.15s, background var(--dur-theme);
+}
+.tip-field:focus { border-color: var(--accent); }
+.tip-pct-row { display: flex; gap: var(--gap-sm); flex-wrap: wrap; }
+.tip-pct-btn {
+  height: 36px;
+  padding: 0 var(--gap-md);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.tip-pct-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+.tip-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--input-bg);
+  border-radius: var(--r-input);
+  padding: var(--gap-md) var(--gap-lg);
+  border: 1px solid var(--border);
+}
+.tip-result-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.tip-result-val { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text-primary); }
+.tip-copy-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: background 0.12s, color 0.12s;
+}
+.tip-copy-btn:active { background: var(--accent-dim); color: var(--accent); }
+
+/* ============================================================
+   ANGLE MODE SEGMENT (Basic tab inline)
+   ============================================================ */
+.angle-seg {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.angle-seg-btn {
+  flex: 1;
+  height: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.angle-seg-btn.active { background: var(--accent); color: #fff; }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+#toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 20px);
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--toast-bg);
+  color: var(--text-primary);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 1000;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-light);
+  max-width: 260px;
+  left: 50%;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   SECTION LABELS / MISC
+   ============================================================ */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: var(--gap-sm);
+}
+
+.danger-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--r-sm);
+  background: rgba(255,100,100,0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(255,100,100,0.2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: var(--gap-md);
+  transition: background 0.12s;
+}
+.danger-btn:active { background: rgba(255,100,100,0.2); }
+
+.add-fn-btn {
+  height: 38px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.12s;
+}
+.add-fn-btn:active { background: var(--accent-dim); }
+
+.about-section {
+  background: var(--surface-2);
+  border-radius: var(--r-btn);
+  padding: var(--gap-lg);
+  margin-top: var(--gap-lg);
+  border: 1px solid var(--border);
+}
+.about-name { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.about-meta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.about-tier {
+  display: inline-block;
+  margin-top: var(--gap-sm);
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+/* 3D input field */
+.fn3d-row {
+  display: flex;
+  gap: var(--gap-sm);
+  padding: var(--gap-md) var(--gap-lg);
+  align-items: center;
+}
+.fn3d-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+
+/* Responsive: large phones */
+@media (min-height: 800px) {
+  .calc-btn { height: 72px; }
+  .calc-display { min-height: 130px; }
+  .display-result { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <header id="header">
+    <div id="header-logo">Solv<span>r</span></div>
+    <div id="header-actions">
+      <button class="icon-btn" id="btn-history" title="History" aria-label="History">🕐</button>
+      <button class="icon-btn" id="btn-settings" title="Settings" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main id="content">
+
+    <!-- ====== CORE TAB ====== -->
+    <div class="tab-panel active" id="tab-core">
+      <!-- Display -->
+      <div class="calc-display" id="core-display" title="Long-press to copy">
+        <div class="display-expression" id="core-expr"></div>
+        <div class="display-result" id="core-result">0</div>
+        <div class="display-meta">
+          <div class="memory-dot" id="core-mem-dot"></div>
+          <div style="font-size:11px;color:var(--text-dim);font-weight:600;">CORE · FREE</div>
+        </div>
+      </div>
+      <!-- Memory row -->
+      <div class="memory-row">
+        <button class="mem-btn" data-mem="M+">M+</button>
+        <button class="mem-btn" data-mem="M-">M−</button>
+        <button class="mem-btn" data-mem="MR">MR</button>
+        <button class="mem-btn" data-mem="MC">MC</button>
+      </div>
+      <!-- Quick actions -->
+      <div class="quick-row">
+        <button class="quick-btn" id="btn-tip-open">🧾 Tip Calc</button>
+      </div>
+      <!-- Core grid -->
+      <div class="calc-grid core-grid" id="core-grid">
+        <button class="calc-btn btn-fn btn-clear" data-action="AC">AC</button>
+        <button class="calc-btn btn-fn" data-action="plus-minus">+/−</button>
+        <button class="calc-btn btn-fn" data-action="percent">%</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="÷">÷</button>
+
+        <button class="calc-btn" data-action="num" data-val="7">7</button>
+        <button class="calc-btn" data-action="num" data-val="8">8</button>
+        <button class="calc-btn" data-action="num" data-val="9">9</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="×">×</button>
+
+        <button class="calc-btn" data-action="num" data-val="4">4</button>
+        <button class="calc-btn" data-action="num" data-val="5">5</button>
+        <button class="calc-btn" data-action="num" data-val="6">6</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="−">−</button>
+
+        <button class="calc-btn" data-action="num" data-val="1">1</button>
+        <button class="calc-btn" data-action="num" data-val="2">2</button>
+        <button class="calc-btn" data-action="num" data-val="3">3</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="+">+</button>
+
+        <button class="calc-btn span-2" data-action="num" data-val="0">0</button>
+        <button class="calc-btn" data-action="num" data-val=".">.</button>
+        <button class="calc-btn btn-eq" data-action="equals">=</button>
+      </div>
+    </div><!-- /tab-core -->
+
+    <!-- ====== BASIC TAB ====== -->
+    <div class="tab-panel" id="tab-basic">
+      <!-- Display -->
+      <div class="calc-display" id="basic-display" title="Long-press to copy">
+        <div class="display-expression" id="basic-expr"></div>
+        <div class="display-result" id="basic-result">0</div>
+        <div class="display-meta">
+          <div class="angle-mode-badge" id="angle-badge" title="Tap to change angle mode">DEG</div>
+          <div style="font-size:11px;color:var(--text-dim);font-weight:600;">BASIC · UNLOCKED</div>
+        </div>
+      </div>
+      <!-- Basic grid -->
+      <div class="calc-grid basic-grid" id="basic-grid">
+        <!-- Row 1: angle/clear/ops -->
+        <button class="calc-btn btn-fn" data-action="b-inv" id="inv-btn">INV</button>
+        <button class="calc-btn btn-fn" data-action="b-const">CONST</button>
+        <button class="calc-btn btn-fn btn-clear" data-action="AC">AC</button>
+        <button class="calc-btn btn-fn" data-action="backspace">⌫</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="÷">÷</button>
+
+        <!-- Row 2 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="sin" id="btn-sin">sin</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="cos" id="btn-cos">cos</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="tan" id="btn-tan">tan</button>
+        <button class="calc-btn" data-action="num" data-val="7">7</button>
+        <button class="calc-btn" data-action="num" data-val="8">8</button>
+
+        <!-- Row 3 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="log">log</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="ln">ln</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="sqrt">√</button>
+        <button class="calc-btn" data-action="num" data-val="9">9</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="×">×</button>
+
+        <!-- Row 4 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="x2">x²</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="x3">x³</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="xn">xⁿ</button>
+        <button class="calc-btn" data-action="num" data-val="4">4</button>
+        <button class="calc-btn" data-action="num" data-val="5">5</button>
+
+        <!-- Row 5 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="fact">n!</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="abs">|x|</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="cbrt">∛</button>
+        <button class="calc-btn" data-action="num" data-val="6">6</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="−">−</button>
+
+        <!-- Row 6 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="pi">π</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="e-const">e</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="mod">mod</button>
+        <button class="calc-btn" data-action="num" data-val="1">1</button>
+        <button class="calc-btn" data-action="num" data-val="2">2</button>
+
+        <!-- Row 7 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="open-paren">(</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="close-paren">)</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="nth-root">ⁿ√</button>
+        <button class="calc-btn" data-action="num" data-val="3">3</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="+">+</button>
+
+        <!-- Row 8 -->
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="10x">10ˣ</button>
+        <button class="calc-btn btn-fn" data-action="b-fn" data-fn="ex">eˣ</button>
+        <button class="calc-btn" data-action="plus-minus">+/−</button>
+        <button class="calc-btn span-2 btn-eq" data-action="equals">=</button>
+        <!-- Remaining row -->
+        <button class="calc-btn" data-action="num" data-val="0">0</button>
+        <button class="calc-btn" data-action="num" data-val=".">.</button>
+        <button class="calc-btn btn-fn" data-action="percent">%</button>
+      </div>
+    </div><!-- /tab-basic -->
+
+    <!-- ====== PRO TAB ====== -->
+    <div class="tab-panel" id="tab-pro">
+      <!-- 2D Graph section -->
+      <div class="graph-section">
+        <div class="graph-section-header">
+          <span class="graph-section-title">2D Graph</span>
+          <span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent);padding:2px 7px;border-radius:3px;letter-spacing:.05em;">PRO</span>
+        </div>
+        <div class="fn-list" id="fn-list-2d">
+          <!-- Populated by JS -->
+        </div>
+        <div style="padding:0 var(--gap-lg) var(--gap-sm);">
+          <button class="add-fn-btn" id="add-fn-btn">+ Add function</button>
+        </div>
+        <div class="graph-container" id="graph-container-2d">
+          <div id="jxgbox"></div>
+        </div>
+        <div class="graph-controls">
+          <button class="ctrl-btn" id="btn-reset-2d">Reset View</button>
+          <button class="ctrl-btn active" id="btn-grid">Grid</button>
+          <button class="ctrl-btn active" id="btn-axes">Axes</button>
+          <button class="ctrl-btn" id="btn-intersect">Zeros &amp; Intersects</button>
+        </div>
+      </div>
+
+      <!-- 3D Graph section -->
+      <div class="graph-section">
+        <div class="graph-section-header">
+          <span class="graph-section-title">3D Surface</span>
+          <span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent);padding:2px 7px;border-radius:3px;letter-spacing:.05em;">PRO</span>
+        </div>
+        <div class="fn3d-row">
+          <span class="fn3d-label">f(x,y) =</span>
+          <input class="fn-input" id="fn3d-input" value="sin(sqrt(x^2+y^2))" placeholder="e.g. sin(x)*cos(y)">
+          <button class="ctrl-btn" id="btn-plot3d">Plot</button>
+        </div>
+        <div class="graph-container" id="graph-container-3d">
+          <canvas id="canvas3d"></canvas>
+        </div>
+        <div class="graph-controls">
+          <button class="ctrl-btn" id="btn-reset-3d">Reset View</button>
+          <button class="ctrl-btn" id="btn-wireframe">Wireframe</button>
+        </div>
+      </div>
+    </div><!-- /tab-pro -->
+
+    <!-- ====== CONVERTER TAB ====== -->
+    <div class="tab-panel" id="tab-converter">
+      <div class="converter-cats" id="conv-cats">
+        <button class="cat-btn active" data-cat="length">Length</button>
+        <button class="cat-btn" data-cat="weight">Weight</button>
+        <button class="cat-btn" data-cat="temperature">Temp</button>
+        <button class="cat-btn" data-cat="volume">Volume</button>
+      </div>
+      <div class="converter-panel">
+        <div class="conv-row">
+          <div class="conv-label">From</div>
+          <div class="conv-field">
+            <input class="conv-input" id="conv-from-val" type="number" value="1" inputmode="decimal">
+            <select class="conv-select" id="conv-from-unit"></select>
+          </div>
+        </div>
+        <button class="swap-btn" id="conv-swap">⇅</button>
+        <div class="conv-row">
+          <div class="conv-label">To</div>
+          <div class="conv-field">
+            <input class="conv-input" id="conv-to-val" type="number" inputmode="decimal">
+            <select class="conv-select" id="conv-to-unit"></select>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-converter -->
+
+  </main><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-tab active" data-tab="core">
+      <span class="nav-icon">◻</span>
+      <span class="nav-label">Core</span>
+    </button>
+    <button class="nav-tab" data-tab="basic">
+      <span class="nav-icon">∑</span>
+      <span class="nav-label">Basic</span>
+      <span class="tier-badge">FREE</span>
+    </button>
+    <button class="nav-tab" data-tab="pro">
+      <span class="nav-icon">∫</span>
+      <span class="nav-label">Pro</span>
+      <span class="tier-badge">PRO</span>
+    </button>
+    <button class="nav-tab" data-tab="converter">
+      <span class="nav-icon">⇌</span>
+      <span class="nav-label">Convert</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- OVERLAYS & DRAWERS -->
+<div class="drawer-overlay" id="overlay"></div>
+
+<!-- History drawer -->
+<div class="drawer" id="drawer-history">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">History</div>
+  <div class="drawer-body">
+    <div id="history-list"></div>
+    <button class="danger-btn" id="btn-clear-history">Clear History</button>
+  </div>
+</div>
+
+<!-- Tip calculator drawer -->
+<div class="drawer" id="drawer-tip">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Tip Calculator</div>
+  <div class="drawer-body">
+    <div class="tip-panel-inner">
+      <div class="tip-input-group">
+        <label class="tip-label">Bill Amount ($)</label>
+        <input class="tip-field" id="tip-bill" type="number" inputmode="decimal" placeholder="0.00">
+      </div>
+      <div class="tip-input-group">
+        <label class="tip-label">Tip %</label>
+        <div class="tip-pct-row" id="tip-pct-row">
+          <button class="tip-pct-btn" data-pct="10">10%</button>
+          <button class="tip-pct-btn active" data-pct="18">18%</button>
+          <button class="tip-pct-btn" data-pct="20">20%</button>
+          <button class="tip-pct-btn" data-pct="25">25%</button>
+          <button class="tip-pct-btn" data-pct="30">30%</button>
+          <input class="tip-field" id="tip-custom-pct" type="number" inputmode="decimal" placeholder="Custom" style="width:90px;height:36px;font-size:14px;padding:0 8px;">
+        </div>
+      </div>
+      <div class="tip-input-group">
+        <label class="tip-label">Number of People</label>
+        <input class="tip-field" id="tip-people" type="number" inputmode="numeric" value="1" min="1">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div class="tip-result-row">
+          <div><div class="tip-result-label">Tip Amount</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="tip-result-val" id="tip-out-tip">$0.00</div>
+            <button class="tip-copy-btn" data-copy="tip">⎘</button>
+          </div>
+        </div>
+        <div class="tip-result-row">
+          <div><div class="tip-result-label">Total Bill</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="tip-result-val" id="tip-out-total">$0.00</div>
+            <button class="tip-copy-btn" data-copy="total">⎘</button>
+          </div>
+        </div>
+        <div class="tip-result-row">
+          <div><div class="tip-result-label">Per Person</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="tip-result-val" id="tip-out-per">$0.00</div>
+            <button class="tip-copy-btn" data-copy="per">⎘</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Constants drawer -->
+<div class="drawer" id="drawer-constants">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Constants</div>
+  <div class="drawer-body">
+    <div id="constants-list"></div>
+  </div>
+</div>
+
+<!-- Settings drawer -->
+<div class="drawer" id="drawer-settings">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Settings</div>
+  <div class="drawer-body">
+    <div class="setting-row">
+      <div><div class="setting-label">Theme</div><div class="setting-sub" id="theme-sub">Dark</div></div>
+      <div class="toggle" id="toggle-theme"></div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Haptics</div><div class="setting-sub">Vibration feedback</div></div>
+      <div class="toggle on" id="toggle-haptics"></div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Sound</div><div class="setting-sub">Button click sounds</div></div>
+      <div class="toggle" id="toggle-sound"></div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Angle Mode</div></div>
+      <div class="angle-seg" id="settings-angle-seg">
+        <button class="angle-seg-btn active" data-mode="DEG">DEG</button>
+        <button class="angle-seg-btn" data-mode="RAD">RAD</button>
+        <button class="angle-seg-btn" data-mode="GRAD">GRAD</button>
+      </div>
+    </div>
+    <button class="danger-btn" id="btn-clear-history-2">Clear History</button>
+    <div class="about-section">
+      <div class="about-name">Solvr</div>
+      <div class="about-meta">Version 1.0.0 · Calculate everything.</div>
+      <div class="about-tier">Pro — Unlocked</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- CDN Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+/* ============================================================
+   STATE MANAGEMENT
+   ============================================================ */
+const state = {
+  activeTab: 'core',
+
+  // Core calc
+  core: {
+    expr: '',
+    result: '0',
+    memory: 0,
+    hasMemory: false,
+    lastResult: null,
+    justEvaluated: false,
+  },
+
+  // Basic calc (shares expression engine)
+  basic: {
+    expr: '',
+    result: '0',
+    lastResult: null,
+    justEvaluated: false,
+    inv: false,
+  },
+
+  // Settings
+  theme: 'dark',
+  haptics: true,
+  sound: false,
+  angleMode: 'DEG', // DEG | RAD | GRAD
+
+  // History
+  history: [],
+
+  // Tip calc
+  tip: {
+    bill: 0,
+    pct: 18,
+    people: 1,
+  },
+
+  // 2D graphing
+  graph2d: {
+    functions: [],
+    board: null,
+    showGrid: true,
+    showAxes: true,
+    plots: [],
+    markers: [],
+  },
+
+  // 3D graphing
+  graph3d: {
+    renderer: null,
+    scene: null,
+    camera: null,
+    mesh: null,
+    wireframe: false,
+    animId: null,
+  },
+};
+
+const FN_COLORS = ['#6c63ff','#ff6b9d','#43e8a0','#ffd166','#ef6c00','#29b6f6'];
+
+/* ============================================================
+   PERSISTENCE
+   ============================================================ */
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('solvr-state') || '{}');
+    if (saved.theme)      { state.theme = saved.theme; }
+    if (saved.haptics != null) state.haptics = saved.haptics;
+    if (saved.sound != null)   state.sound = saved.sound;
+    if (saved.angleMode)  state.angleMode = saved.angleMode;
+    if (saved.history)    state.history = saved.history.slice(0, 20);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('solvr-state', JSON.stringify({
+      theme: state.theme,
+      haptics: state.haptics,
+      sound: state.sound,
+      angleMode: state.angleMode,
+      history: state.history,
+    }));
+  } catch(e) {}
+}
+
+/* ============================================================
+   HAPTICS
+   ============================================================ */
+const Haptics = {
+  light()    { if (state.haptics && navigator.vibrate) navigator.vibrate(8); },
+  medium()   { if (state.haptics && navigator.vibrate) navigator.vibrate(15); },
+  strong()   { if (state.haptics && navigator.vibrate) navigator.vibrate([20,40,20]); },
+};
+
+/* ============================================================
+   SOUND
+   ============================================================ */
+let audioCtx = null;
+function playTick() {
+  if (!state.sound) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+/* ============================================================
+   DRAWER SYSTEM
+   ============================================================ */
+let activeDrawer = null;
+const overlay = document.getElementById('overlay');
+
+function openDrawer(id) {
+  if (activeDrawer) closeDrawer();
+  const d = document.getElementById(id);
+  d.classList.add('open');
+  overlay.classList.add('open');
+  activeDrawer = d;
+}
+
+function closeDrawer() {
+  if (!activeDrawer) return;
+  activeDrawer.classList.remove('open');
+  overlay.classList.remove('open');
+  activeDrawer = null;
+}
+
+overlay.addEventListener('click', closeDrawer);
+
+/* ============================================================
+   TAB NAVIGATION
+   ============================================================ */
+function switchTab(tab) {
+  if (tab === state.activeTab) return;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`.nav-tab[data-tab="${tab}"]`).classList.add('active');
+  state.activeTab = tab;
+
+  if (tab === 'pro') {
+    initGraph2D();
+    initGraph3D();
+  }
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    Haptics.light();
+    switchTab(btn.dataset.tab);
+  });
+});
+
+/* ============================================================
+   FORMAT NUMBER
+   ============================================================ */
+function formatNum(n) {
+  if (typeof n !== 'number' || isNaN(n)) return 'Invalid';
+  if (!isFinite(n)) return n > 0 ? '∞' : '−∞';
+  const abs = Math.abs(n);
+  if (abs !== 0 && (abs >= 1e15 || abs < 1e-10)) {
+    return n.toExponential(6).replace('e+', '×10^').replace('e-', '×10^−').replace('e', '×10^');
+  }
+  // Use toPrecision to avoid floating point noise, then clean up
+  let s = parseFloat(n.toPrecision(12)).toString();
+  return s;
+}
+
+/* ============================================================
+   CALCULATOR LOGIC (shared for Core + Basic)
+   ============================================================ */
+
+// Convert display operator symbols to math.js compatible
+function toMathExpr(expr, isBasic) {
+  return expr
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/−/g, '-')
+    .replace(/π/g, 'pi')
+    .replace(/mod/g, 'mod');
+}
+
+function evalExpr(expr, angleMode) {
+  const scope = {};
+  let exprClean = toMathExpr(expr);
+
+  // Angle conversion wrapper for trig
+  if (angleMode === 'DEG') {
+    exprClean = exprClean
+      .replace(/\bsin\(/g, 'sin(')
+      .replace(/\bcos\(/g, 'cos(')
+      .replace(/\btan\(/g, 'tan(');
+  }
+
+  try {
+    let result;
+    if (angleMode === 'DEG') {
+      // Use math.js unit-aware evaluation
+      const mathDeg = math.create(math.all, { angles: 'deg' });
+      result = mathDeg.evaluate(exprClean, scope);
+    } else if (angleMode === 'GRAD') {
+      // Convert grad to rad manually: grad * pi/200
+      const mathGrad = math.create(math.all, {});
+      exprClean = exprClean
+        .replace(/\bsin\(([^)]+)\)/g, (_, a) => `sin((${a})*pi/200)`)
+        .replace(/\bcos\(([^)]+)\)/g, (_, a) => `cos((${a})*pi/200)`)
+        .replace(/\btan\(([^)]+)\)/g, (_, a) => `tan((${a})*pi/200)`);
+      result = mathGrad.evaluate(exprClean, scope);
+    } else {
+      result = math.evaluate(exprClean, scope);
+    }
+
+    if (typeof result === 'object' && result !== null && typeof result.toNumber === 'function') {
+      result = result.toNumber();
+    }
+    return { ok: true, value: result };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/* ---- Core calc state machine ---- */
+const core = state.core;
+const basicS = state.basic;
+
+function coreInput(action, val) {
+  Haptics.light();
+  playTick();
+
+  if (action === 'AC') {
+    core.expr = '';
+    core.result = '0';
+    core.justEvaluated = false;
+    renderCore();
+    return;
+  }
+  if (action === 'backspace') {
+    if (core.justEvaluated) { core.expr = ''; core.result = '0'; core.justEvaluated = false; }
+    else core.expr = core.expr.slice(0, -1);
+    if (!core.expr) core.result = '0';
+    renderCore();
+    return;
+  }
+  if (action === 'num') {
+    if (core.justEvaluated && val !== '.') {
+      core.expr = '';
+      core.justEvaluated = false;
+    }
+    // Prevent duplicate decimals in current number segment
+    if (val === '.') {
+      const parts = core.expr.split(/[\+\-\×\÷]/);
+      const last = parts[parts.length - 1];
+      if (last.includes('.')) return;
+    }
+    core.expr += val;
+    renderCore();
+    return;
+  }
+  if (action === 'op') {
+    Haptics.medium();
+    if (core.justEvaluated) core.justEvaluated = false;
+    // Replace trailing operator
+    if (/[+\-×÷]$/.test(core.expr)) {
+      core.expr = core.expr.slice(0, -1);
+    }
+    if (core.expr === '' && val === '−') {
+      core.expr = '−';
+    } else if (core.expr !== '') {
+      core.expr += val;
+    }
+    renderCore();
+    return;
+  }
+  if (action === 'plus-minus') {
+    if (core.expr === '' || core.expr === '0') return;
+    if (core.expr.startsWith('−(') && core.expr.endsWith(')')) {
+      core.expr = core.expr.slice(2, -1);
+    } else {
+      core.expr = '−(' + core.expr + ')';
+    }
+    renderCore();
+    return;
+  }
+  if (action === 'percent') {
+    const r = evalExpr(core.expr || '0', state.angleMode);
+    if (r.ok) {
+      const pctVal = r.value / 100;
+      core.expr = formatNum(pctVal);
+      core.result = formatNum(pctVal);
+      core.justEvaluated = true;
+      renderCore();
+    }
+    return;
+  }
+  if (action === 'equals') {
+    Haptics.strong();
+    if (!core.expr) return;
+    const r = evalExpr(core.expr, state.angleMode);
+    if (!r.ok) {
+      let msg = 'Check your expression.';
+      if (r.error.includes('divide') || r.error.includes('zero')) msg = 'Cannot divide by zero.';
+      core.result = msg;
+      renderCore();
+      return;
+    }
+    const val2 = r.value;
+    if (!isFinite(val2) && val2 > 0) { core.result = '∞'; renderCore(); return; }
+    const fmt = formatNum(val2);
+    addHistory(core.expr, fmt);
+    core.result = fmt;
+    core.lastResult = val2;
+    core.justEvaluated = true;
+    animateResult('core');
+    renderCore();
+    return;
+  }
+}
+
+function renderCore() {
+  document.getElementById('core-expr').textContent = core.expr || '';
+  const el = document.getElementById('core-result');
+  el.textContent = core.result;
+  // Scale font
+  const len = core.result.length;
+  el.style.fontSize = len > 14 ? '22px' : len > 10 ? '32px' : '';
+}
+
+/* Memory for core */
+document.querySelectorAll('[data-mem]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    Haptics.light();
+    playTick();
+    const op = btn.dataset.mem;
+    const cur = parseFloat(core.result) || 0;
+    if (op === 'M+') { core.memory += cur; core.hasMemory = true; }
+    if (op === 'M-') { core.memory -= cur; core.hasMemory = core.memory !== 0; }
+    if (op === 'MR') {
+      if (core.justEvaluated) core.expr = '';
+      core.expr += formatNum(core.memory);
+      core.justEvaluated = false;
+      renderCore();
+    }
+    if (op === 'MC') { core.memory = 0; core.hasMemory = false; }
+    document.getElementById('core-mem-dot').classList.toggle('active', core.hasMemory);
+  });
+});
+
+/* ---- Basic calc ---- */
+function basicInput(action, val) {
+  playTick();
+
+  if (action === 'AC') {
+    Haptics.medium();
+    basicS.expr = '';
+    basicS.result = '0';
+    basicS.justEvaluated = false;
+    renderBasic();
+    return;
+  }
+  if (action === 'backspace') {
+    Haptics.light();
+    if (basicS.justEvaluated) { basicS.expr = ''; basicS.result = '0'; basicS.justEvaluated = false; }
+    else basicS.expr = basicS.expr.slice(0, -1);
+    if (!basicS.expr) basicS.result = '0';
+    renderBasic();
+    return;
+  }
+  if (action === 'num') {
+    Haptics.light();
+    if (basicS.justEvaluated && val !== '.') {
+      basicS.expr = '';
+      basicS.justEvaluated = false;
+    }
+    if (val === '.') {
+      const parts = basicS.expr.split(/[\+\-\×\÷\*\/]/);
+      const last = parts[parts.length - 1];
+      if (last.includes('.')) return;
+    }
+    basicS.expr += val;
+    renderBasic();
+    return;
+  }
+  if (action === 'op') {
+    Haptics.medium();
+    if (basicS.justEvaluated) basicS.justEvaluated = false;
+    if (/[+\-×÷]$/.test(basicS.expr)) basicS.expr = basicS.expr.slice(0, -1);
+    if (basicS.expr === '' && val === '−') basicS.expr = '−';
+    else if (basicS.expr !== '') basicS.expr += val;
+    renderBasic();
+    return;
+  }
+  if (action === 'plus-minus') {
+    Haptics.light();
+    if (!basicS.expr) return;
+    basicS.expr = basicS.expr.startsWith('−(') ? basicS.expr.slice(2, -1) : '−(' + basicS.expr + ')';
+    renderBasic();
+    return;
+  }
+  if (action === 'percent') {
+    Haptics.light();
+    const r = evalExpr(basicS.expr || '0', state.angleMode);
+    if (r.ok) {
+      const v = r.value / 100;
+      basicS.expr = formatNum(v);
+      basicS.result = formatNum(v);
+      basicS.justEvaluated = true;
+      renderBasic();
+    }
+    return;
+  }
+  if (action === 'equals') {
+    Haptics.strong();
+    if (!basicS.expr) return;
+    const r = evalExpr(basicS.expr, state.angleMode);
+    if (!r.ok) {
+      let msg = 'Check your expression.';
+      if (r.error.includes('divide') || r.error.includes('zero')) msg = 'Cannot divide by zero.';
+      if (r.error.includes('NaN') || r.error.includes('negative')) msg = 'No real result.';
+      basicS.result = msg;
+      renderBasic();
+      return;
+    }
+    const v = r.value;
+    const fmt = formatNum(v);
+    addHistory(basicS.expr, fmt);
+    basicS.result = fmt;
+    basicS.lastResult = v;
+    basicS.justEvaluated = true;
+    animateResult('basic');
+    renderBasic();
+    return;
+  }
+  if (action === 'b-inv') {
+    Haptics.light();
+    basicS.inv = !basicS.inv;
+    document.getElementById('inv-btn').classList.toggle('inv-active', basicS.inv);
+    // Relabel trig keys
+    const labels = basicS.inv
+      ? { sin: 'sin⁻¹', cos: 'cos⁻¹', tan: 'tan⁻¹' }
+      : { sin: 'sin', cos: 'cos', tan: 'tan' };
+    document.getElementById('btn-sin').textContent = labels.sin;
+    document.getElementById('btn-cos').textContent = labels.cos;
+    document.getElementById('btn-tan').textContent = labels.tan;
+    return;
+  }
+  if (action === 'b-const') {
+    Haptics.light();
+    openDrawer('drawer-constants');
+    return;
+  }
+  if (action === 'b-fn') {
+    Haptics.light();
+    const fn = val;
+    if (basicS.justEvaluated) basicS.justEvaluated = false;
+
+    const inv = basicS.inv;
+
+    if (fn === 'sin')   { basicS.expr += inv ? 'asin(' : 'sin('; }
+    else if (fn === 'cos')   { basicS.expr += inv ? 'acos(' : 'cos('; }
+    else if (fn === 'tan')   { basicS.expr += inv ? 'atan(' : 'tan('; }
+    else if (fn === 'log')   { basicS.expr += 'log10('; }
+    else if (fn === 'ln')    { basicS.expr += 'log('; }
+    else if (fn === 'sqrt')  { basicS.expr += 'sqrt('; }
+    else if (fn === 'cbrt')  { basicS.expr += 'cbrt('; }
+    else if (fn === 'x2')    { basicS.expr += '^2'; }
+    else if (fn === 'x3')    { basicS.expr += '^3'; }
+    else if (fn === 'xn')    { basicS.expr += '^'; }
+    else if (fn === 'fact')  { basicS.expr += '!'; }
+    else if (fn === 'abs')   { basicS.expr += 'abs('; }
+    else if (fn === 'pi')    { basicS.expr += 'π'; }
+    else if (fn === 'e-const'){ basicS.expr += 'e'; }
+    else if (fn === 'mod')   { basicS.expr += ' mod '; }
+    else if (fn === 'open-paren')  { basicS.expr += '('; }
+    else if (fn === 'close-paren') { basicS.expr += ')'; }
+    else if (fn === 'nth-root') { basicS.expr += 'nthRoot('; }
+    else if (fn === '10x')   { basicS.expr += '10^('; }
+    else if (fn === 'ex')    { basicS.expr += 'exp('; }
+
+    renderBasic();
+    return;
+  }
+}
+
+function renderBasic() {
+  document.getElementById('basic-expr').textContent = basicS.expr || '';
+  const el = document.getElementById('basic-result');
+  el.textContent = basicS.result;
+  const len = basicS.result.length;
+  el.style.fontSize = len > 14 ? '20px' : len > 10 ? '28px' : '';
+}
+
+function animateResult(tab) {
+  const el = document.getElementById(tab + '-result');
+  el.classList.remove('result-animate');
+  void el.offsetWidth;
+  el.classList.add('result-animate');
+}
+
+/* Core grid events */
+document.getElementById('core-grid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const val = btn.dataset.val;
+  coreInput(action, val);
+});
+
+/* Basic grid events */
+document.getElementById('basic-grid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  basicInput(btn.dataset.action, btn.dataset.fn || btn.dataset.val);
+});
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+function addHistory(expr, result) {
+  state.history.unshift({ expr, result, ts: Date.now() });
+  if (state.history.length > 20) state.history.pop();
+  saveState();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!state.history.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;padding:20px 0;text-align:center;">No history yet.</div>';
+    return;
+  }
+  list.innerHTML = state.history.map((h, i) => `
+    <div class="history-item" data-idx="${i}">
+      <div class="history-expr">${escHtml(h.expr)}</div>
+      <div class="history-result">${escHtml(h.result)}</div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const h = state.history[+item.dataset.idx];
+      if (state.activeTab === 'basic') {
+        basicS.expr = '';
+        basicS.result = h.result;
+        basicS.justEvaluated = true;
+        renderBasic();
+      } else {
+        core.expr = '';
+        core.result = h.result;
+        core.justEvaluated = true;
+        renderCore();
+      }
+      closeDrawer();
+      Haptics.light();
+    });
+  });
+}
+
+function clearHistory() {
+  if (!confirm('Clear all history?')) return;
+  state.history = [];
+  saveState();
+  renderHistory();
+}
+
+document.getElementById('btn-history').addEventListener('click', () => {
+  renderHistory();
+  openDrawer('drawer-history');
+  Haptics.light();
+});
+document.getElementById('btn-clear-history').addEventListener('click', clearHistory);
+document.getElementById('btn-clear-history-2').addEventListener('click', clearHistory);
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ============================================================
+   ANGLE MODE
+   ============================================================ */
+function setAngleMode(mode) {
+  state.angleMode = mode;
+  document.getElementById('angle-badge').textContent = mode;
+  // Sync settings panel
+  document.querySelectorAll('#settings-angle-seg .angle-seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  saveState();
+}
+
+document.getElementById('angle-badge').addEventListener('click', () => {
+  const modes = ['DEG','RAD','GRAD'];
+  const next = modes[(modes.indexOf(state.angleMode) + 1) % 3];
+  setAngleMode(next);
+  Haptics.light();
+});
+
+document.querySelectorAll('#settings-angle-seg .angle-seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setAngleMode(btn.dataset.mode);
+    Haptics.light();
+  });
+});
+
+/* ============================================================
+   CONSTANTS PANEL
+   ============================================================ */
+const CONSTANTS = [
+  { name: 'π', desc: 'Pi', val: Math.PI, display: '3.14159265...' },
+  { name: 'e', desc: "Euler's number", val: Math.E, display: '2.71828182...' },
+  { name: 'g', desc: 'Gravitational acceleration', val: 9.80665, display: '9.80665 m/s²' },
+  { name: 'c', desc: 'Speed of light', val: 2.998e8, display: '2.998×10⁸ m/s' },
+  { name: 'h', desc: 'Planck constant', val: 6.626e-34, display: '6.626×10⁻³⁴ J·s' },
+  { name: 'Nₐ', desc: "Avogadro's number", val: 6.022e23, display: '6.022×10²³ mol⁻¹' },
+  { name: 'R', desc: 'Gas constant', val: 8.314, display: '8.314 J/mol·K' },
+  { name: 'e⁻', desc: 'Elementary charge', val: 1.602e-19, display: '1.602×10⁻¹⁹ C' },
+];
+
+function renderConstants() {
+  document.getElementById('constants-list').innerHTML = CONSTANTS.map((c, i) => `
+    <div class="constant-item" data-idx="${i}">
+      <div>
+        <div class="constant-name">${c.name} — ${c.desc}</div>
+        <div class="constant-val">${c.display}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.constant-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const c = CONSTANTS[+item.dataset.idx];
+      basicS.expr += c.val.toString();
+      renderBasic();
+      closeDrawer();
+      Haptics.light();
+    });
+  });
+}
+renderConstants();
+
+/* ============================================================
+   TIP CALCULATOR
+   ============================================================ */
+document.getElementById('btn-tip-open').addEventListener('click', () => {
+  openDrawer('drawer-tip');
+  Haptics.light();
+});
+
+function calcTip() {
+  const bill = parseFloat(document.getElementById('tip-bill').value) || 0;
+  const pct  = state.tip.pct;
+  const ppl  = Math.max(1, parseInt(document.getElementById('tip-people').value) || 1);
+  const tip  = bill * pct / 100;
+  const total = bill + tip;
+  const per   = total / ppl;
+  document.getElementById('tip-out-tip').textContent   = '$' + tip.toFixed(2);
+  document.getElementById('tip-out-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('tip-out-per').textContent   = '$' + per.toFixed(2);
+  state.tip = { bill, pct, people: ppl };
+}
+
+['tip-bill','tip-people'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calcTip);
+});
+
+document.getElementById('tip-custom-pct').addEventListener('input', function() {
+  const v = parseFloat(this.value);
+  if (!isNaN(v) && v > 0) {
+    state.tip.pct = v;
+    document.querySelectorAll('.tip-pct-btn').forEach(b => b.classList.remove('active'));
+    calcTip();
+  }
+});
+
+document.getElementById('tip-pct-row').addEventListener('click', e => {
+  const btn = e.target.closest('.tip-pct-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tip-pct-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.tip.pct = +btn.dataset.pct;
+  document.getElementById('tip-custom-pct').value = '';
+  calcTip();
+  Haptics.light();
+});
+
+document.querySelectorAll('.tip-copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const map = { tip: 'tip-out-tip', total: 'tip-out-total', per: 'tip-out-per' };
+    const text = document.getElementById(map[btn.dataset.copy]).textContent;
+    navigator.clipboard.writeText(text).then(() => showToast('Copied ' + text));
+    Haptics.light();
+  });
+});
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+document.getElementById('btn-settings').addEventListener('click', () => {
+  openDrawer('drawer-settings');
+  Haptics.light();
+});
+
+function applyTheme(theme) {
+  state.theme = theme;
+  document.documentElement.dataset.theme = theme === 'light' ? 'light' : '';
+  document.getElementById('theme-sub').textContent = theme === 'dark' ? 'Dark' : 'Light';
+  document.getElementById('toggle-theme').classList.toggle('on', theme === 'light');
+  saveState();
+}
+
+document.getElementById('toggle-theme').addEventListener('click', () => {
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  Haptics.light();
+});
+
+document.getElementById('toggle-haptics').addEventListener('click', function() {
+  state.haptics = !state.haptics;
+  this.classList.toggle('on', state.haptics);
+  saveState();
+});
+
+document.getElementById('toggle-sound').addEventListener('click', function() {
+  state.sound = !state.sound;
+  this.classList.toggle('on', state.sound);
+  // Unlock audio context on first toggle
+  if (state.sound && !audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  saveState();
+  if (state.sound) playTick();
+});
+
+/* ============================================================
+   CLIPBOARD — long press / right click display
+   ============================================================ */
+function setupCopyDisplay(el, getVal) {
+  let pressTimer;
+  el.addEventListener('mousedown', () => { pressTimer = setTimeout(() => copyResult(getVal()), 500); });
+  el.addEventListener('touchstart', () => { pressTimer = setTimeout(() => copyResult(getVal()), 500); }, { passive: true });
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev => {
+    el.addEventListener(ev, () => clearTimeout(pressTimer));
+  });
+  el.addEventListener('contextmenu', e => { e.preventDefault(); copyResult(getVal()); });
+}
+
+function copyResult(val) {
+  navigator.clipboard.writeText(val).then(() => showToast('Copied'));
+  Haptics.medium();
+}
+
+setupCopyDisplay(document.getElementById('core-display'), () => core.result);
+setupCopyDisplay(document.getElementById('basic-display'), () => basicS.result);
+
+/* ============================================================
+   KEYBOARD SUPPORT
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if (activeDrawer) return;
+  if (e.target.tagName === 'INPUT') return;
+  const tab = state.activeTab;
+
+  const input = tab === 'basic' ? basicInput : coreInput;
+
+  if (e.key >= '0' && e.key <= '9') { input('num', e.key); return; }
+  if (e.key === '.') { input('num', '.'); return; }
+  if (e.key === '+') { input('op', '+'); return; }
+  if (e.key === '-') { input('op', '−'); return; }
+  if (e.key === '*') { input('op', '×'); return; }
+  if (e.key === '/') { e.preventDefault(); input('op', '÷'); return; }
+  if (e.key === 'Enter') { input('equals'); return; }
+  if (e.key === 'Escape') { input('AC'); return; }
+  if (e.key === 'Backspace') { input('backspace'); return; }
+  if (e.key === '%') { input('percent'); return; }
+
+  if (tab === 'basic') {
+    if (e.key === '(') { basicInput('b-fn', 'open-paren'); return; }
+    if (e.key === ')') { basicInput('b-fn', 'close-paren'); return; }
+    if (e.key === 's' || e.key === 'S') { basicInput('b-fn', 'sin'); return; }
+    if (e.key === 'c' || e.key === 'C') { basicInput('b-fn', 'cos'); return; }
+    if (e.key === 't' || e.key === 'T') { basicInput('b-fn', 'tan'); return; }
+    if (e.key === 'l' || e.key === 'L') { basicInput('b-fn', 'log'); return; }
+    if (e.key === 'n' || e.key === 'N') { basicInput('b-fn', 'ln'); return; }
+  }
+});
+
+/* ============================================================
+   2D GRAPHING — JSXGraph
+   ============================================================ */
+let board2d = null;
+let graph2dInited = false;
+
+function initGraph2D() {
+  if (graph2dInited) return;
+  graph2dInited = true;
+
+  // Init JSXGraph board
+  try {
+    board2d = JXG.JSXGraph.initBoard('jxgbox', {
+      boundingbox: [-10, 10, 10, -10],
+      keepaspectratio: false,
+      axis: true,
+      showCopyright: false,
+      showNavigation: false,
+      pan: { enabled: true, needTwoFingers: false },
+      zoom: { enabled: true, wheel: true, pinch: true },
+      grid: false,
+    });
+    state.graph2d.board = board2d;
+
+    // Add default function
+    addFunction2D('sin(x)');
+  } catch(e) {
+    console.warn('JSXGraph init failed', e);
+  }
+}
+
+function addFunction2D(expr) {
+  if (state.graph2d.functions.length >= 6) {
+    showToast('Maximum 6 functions');
+    return;
+  }
+  const idx = state.graph2d.functions.length;
+  const color = FN_COLORS[idx % FN_COLORS.length];
+  state.graph2d.functions.push({ expr, color });
+  renderFnList();
+  plotAll2D();
+}
+
+function removeFn2D(idx) {
+  state.graph2d.functions.splice(idx, 1);
+  renderFnList();
+  plotAll2D();
+}
+
+function renderFnList() {
+  const list = document.getElementById('fn-list-2d');
+  list.innerHTML = state.graph2d.functions.map((fn, i) => `
+    <div class="fn-row" data-idx="${i}">
+      <div class="fn-color-swatch" style="background:${fn.color}"></div>
+      <input class="fn-input" value="${escHtml(fn.expr)}" placeholder="e.g. sin(x)" data-fn-idx="${i}">
+      <div class="fn-delete" data-del="${i}">✕</div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.fn-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      const i = +this.dataset.fnIdx;
+      state.graph2d.functions[i].expr = this.value;
+      plotAll2D();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => removeFn2D(+btn.dataset.del));
+  });
+}
+
+function plotAll2D() {
+  if (!board2d) return;
+  // Remove old plots
+  state.graph2d.plots.forEach(p => { try { board2d.removeObject(p); } catch(e){} });
+  state.graph2d.plots = [];
+
+  state.graph2d.functions.forEach(fn => {
+    try {
+      const exprClean = fn.expr.replace(/π/g,'pi').replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+      const curve = board2d.create('functiongraph', [
+        x => {
+          try { return math.evaluate(exprClean, { x }); }
+          catch(e) { return NaN; }
+        },
+        -20, 20
+      ], {
+        strokeColor: fn.color,
+        strokeWidth: 2.5,
+        highlight: false,
+      });
+      state.graph2d.plots.push(curve);
+    } catch(e) {}
+  });
+  board2d.update();
+}
+
+document.getElementById('add-fn-btn').addEventListener('click', () => {
+  addFunction2D('');
+  Haptics.light();
+});
+
+document.getElementById('btn-reset-2d').addEventListener('click', () => {
+  if (board2d) { board2d.setBoundingBox([-10,10,10,-10], true); board2d.update(); }
+  Haptics.light();
+});
+
+let gridActive = true, axesActive = true;
+document.getElementById('btn-grid').addEventListener('click', function() {
+  gridActive = !gridActive;
+  this.classList.toggle('active', gridActive);
+  if (board2d) {
+    try {
+      board2d.grids.forEach(g => { g.visProp.visible = gridActive; });
+      board2d.update();
+    } catch(e) {}
+  }
+  Haptics.light();
+});
+
+document.getElementById('btn-axes').addEventListener('click', function() {
+  axesActive = !axesActive;
+  this.classList.toggle('active', axesActive);
+  if (board2d) {
+    try {
+      board2d.defaultAxes.x.setDisplayRendNode(axesActive);
+      board2d.defaultAxes.y.setDisplayRendNode(axesActive);
+      board2d.update();
+    } catch(e) {}
+  }
+  Haptics.light();
+});
+
+document.getElementById('btn-intersect').addEventListener('click', () => {
+  if (!board2d || !state.graph2d.plots.length) return;
+  // Clear old markers
+  state.graph2d.markers.forEach(m => { try { board2d.removeObject(m); } catch(e){} });
+  state.graph2d.markers = [];
+
+  const bb = board2d.getBoundingBox();
+  const xMin = bb[0], xMax = bb[2];
+  const step = (xMax - xMin) / 500;
+
+  state.graph2d.functions.forEach((fn, fi) => {
+    const exprClean = fn.expr.replace(/π/g,'pi').replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+    const f = x => { try { return math.evaluate(exprClean, { x }); } catch(e) { return NaN; } };
+    // Find zeros
+    for (let x = xMin; x < xMax - step; x += step) {
+      const y1 = f(x), y2 = f(x + step);
+      if (isFinite(y1) && isFinite(y2) && y1 * y2 <= 0) {
+        const xz = x - y1 * step / (y2 - y1);
+        try {
+          const m = board2d.create('point', [xz, 0], {
+            size: 5, face: 'x', strokeColor: fn.color, fillColor: fn.color,
+            name: '(' + xz.toFixed(3) + ', 0)', withLabel: true,
+            label: { fontSize: 11, strokeColor: fn.color },
+            fixed: true, highlight: false,
+          });
+          state.graph2d.markers.push(m);
+        } catch(e) {}
+      }
+    }
+  });
+  board2d.update();
+  showToast('Zeros marked');
+  Haptics.light();
+});
+
+/* ============================================================
+   3D GRAPHING — Three.js
+   ============================================================ */
+let graph3dInited = false;
+let renderer3d, scene3d, camera3d, mesh3d, controls3d;
+let isWireframe = false;
+let isMouseDown = false, lastMouse = { x: 0, y: 0 };
+let spherical = { theta: 0.5, phi: 0.8, r: 4 };
+
+function initGraph3D() {
+  if (graph3dInited) return;
+  graph3dInited = true;
+
+  const canvas = document.getElementById('canvas3d');
+  const container = document.getElementById('graph-container-3d');
+  const W = container.clientWidth || 400;
+  const H = container.clientHeight || 280;
+
+  try {
+    renderer3d = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer3d.setSize(W, H);
+    renderer3d.setPixelRatio(window.devicePixelRatio);
+    renderer3d.setClearColor(0x0a0a0f, 1);
+
+    scene3d = new THREE.Scene();
+    camera3d = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);
+    updateCamera3D();
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene3d.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5, 10, 5);
+    scene3d.add(dir);
+
+    plot3D(document.getElementById('fn3d-input').value);
+    animate3D();
+    setupOrbit();
+  } catch(e) {
+    console.warn('Three.js init failed', e);
+  }
+}
+
+function plot3D(fnStr) {
+  if (!scene3d) return;
+  if (mesh3d) { scene3d.remove(mesh3d); mesh3d.geometry.dispose(); mesh3d.material.dispose(); }
+
+  const exprClean = fnStr.replace(/π/g,'pi').replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+  const f = (x, y) => {
+    try { const v = math.evaluate(exprClean, { x, y }); return isFinite(v) ? Math.max(-10, Math.min(10, v)) : 0; }
+    catch(e) { return 0; }
+  };
+
+  const N = 60;
+  const range = 6;
+  const geo = new THREE.BufferGeometry();
+  const verts = [];
+  const cols = [];
+
+  let zMin = Infinity, zMax = -Infinity;
+  const zGrid = [];
+  for (let i = 0; i <= N; i++) {
+    zGrid[i] = [];
+    for (let j = 0; j <= N; j++) {
+      const x = -range + 2*range*i/N;
+      const y = -range + 2*range*j/N;
+      const z = f(x, y);
+      zGrid[i][j] = z;
+      if (z < zMin) zMin = z;
+      if (z > zMax) zMax = z;
+    }
+  }
+
+  const zRange = zMax - zMin || 1;
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const x0 = -range + 2*range*i/N, x1 = -range + 2*range*(i+1)/N;
+      const y0 = -range + 2*range*j/N, y1 = -range + 2*range*(j+1)/N;
+      const z00 = zGrid[i][j], z10 = zGrid[i+1][j];
+      const z01 = zGrid[i][j+1], z11 = zGrid[i+1][j+1];
+
+      const pushVert = (x, y, z) => {
+        verts.push(x, z, y); // swap y/z for Three.js coords
+        const t = (z - zMin) / zRange;
+        // Cool to warm gradient
+        const r = Math.min(1, 2*t);
+        const b = Math.min(1, 2*(1-t));
+        const g = 1 - Math.abs(2*t - 1);
+        cols.push(r, g, b);
+      };
+
+      pushVert(x0,y0,z00); pushVert(x1,y0,z10); pushVert(x0,y1,z01);
+      pushVert(x1,y0,z10); pushVert(x1,y1,z11); pushVert(x0,y1,z01);
+    }
+  }
+
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  geo.computeVertexNormals();
+
+  const mat = isWireframe
+    ? new THREE.MeshBasicMaterial({ vertexColors: true, wireframe: true })
+    : new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, shininess: 40 });
+
+  mesh3d = new THREE.Mesh(geo, mat);
+  scene3d.add(mesh3d);
+}
+
+function updateCamera3D() {
+  if (!camera3d) return;
+  camera3d.position.x = spherical.r * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+  camera3d.position.y = spherical.r * Math.cos(spherical.phi);
+  camera3d.position.z = spherical.r * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+  camera3d.lookAt(0, 0, 0);
+}
+
+function animate3D() {
+  if (!renderer3d) return;
+  requestAnimationFrame(animate3D);
+  renderer3d.render(scene3d, camera3d);
+}
+
+function setupOrbit() {
+  const canvas = document.getElementById('canvas3d');
+
+  canvas.addEventListener('mousedown', e => { isMouseDown = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+  window.addEventListener('mouseup', () => { isMouseDown = false; });
+  window.addEventListener('mousemove', e => {
+    if (!isMouseDown) return;
+    const dx = e.clientX - lastMouse.x, dy = e.clientY - lastMouse.y;
+    spherical.theta -= dx * 0.01;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.01));
+    lastMouse = { x: e.clientX, y: e.clientY };
+    updateCamera3D();
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    spherical.r = Math.max(1.5, Math.min(20, spherical.r + e.deltaY * 0.01));
+    updateCamera3D();
+  }, { passive: false });
+
+  // Touch
+  let lastTouches = null;
+  canvas.addEventListener('touchstart', e => { lastTouches = e.touches; }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && lastTouches) {
+      const dx = e.touches[0].clientX - lastTouches[0].clientX;
+      const dy = e.touches[0].clientY - lastTouches[0].clientY;
+      spherical.theta -= dx * 0.01;
+      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.01));
+      updateCamera3D();
+    } else if (e.touches.length === 2 && lastTouches.length === 2) {
+      const d0 = Math.hypot(lastTouches[0].clientX - lastTouches[1].clientX, lastTouches[0].clientY - lastTouches[1].clientY);
+      const d1 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      spherical.r = Math.max(1.5, Math.min(20, spherical.r * (d0 / d1)));
+      updateCamera3D();
+    }
+    lastTouches = e.touches;
+  }, { passive: false });
+}
+
+document.getElementById('btn-plot3d').addEventListener('click', () => {
+  if (graph3dInited) plot3D(document.getElementById('fn3d-input').value);
+  Haptics.light();
+});
+document.getElementById('fn3d-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && graph3dInited) plot3D(document.getElementById('fn3d-input').value);
+});
+
+document.getElementById('btn-reset-3d').addEventListener('click', () => {
+  spherical = { theta: 0.5, phi: 0.8, r: 4 };
+  updateCamera3D();
+  Haptics.light();
+});
+
+document.getElementById('btn-wireframe').addEventListener('click', function() {
+  isWireframe = !isWireframe;
+  this.classList.toggle('active', isWireframe);
+  if (graph3dInited) plot3D(document.getElementById('fn3d-input').value);
+  Haptics.light();
+});
+
+/* ============================================================
+   UNIT CONVERTER
+   ============================================================ */
+const CONVERSIONS = {
+  length: {
+    units: ['mm','cm','m','km','in','ft','yd','mi'],
+    toBase: { mm:0.001, cm:0.01, m:1, km:1000, in:0.0254, ft:0.3048, yd:0.9144, mi:1609.344 },
+  },
+  weight: {
+    units: ['mg','g','kg','lb','oz','metric ton'],
+    toBase: { mg:1e-6, g:0.001, kg:1, lb:0.453592, oz:0.0283495, 'metric ton':1000 },
+  },
+  temperature: {
+    units: ['°C','°F','K'],
+    // Special handling
+  },
+  volume: {
+    units: ['ml','L','tsp','tbsp','fl oz','cup','pt','qt','gal'],
+    toBase: { ml:0.001, L:1, tsp:0.00492892, tbsp:0.0147868, 'fl oz':0.0295735, cup:0.236588, pt:0.473176, qt:0.946353, gal:3.78541 },
+  },
+};
+
+let currentCat = 'length';
+let convFromVal = 1, convToVal = 0;
+let convUpdating = false;
+
+function getConvUnits() { return CONVERSIONS[currentCat]?.units || []; }
+
+function populateConvSelects() {
+  const units = getConvUnits();
+  const from = document.getElementById('conv-from-unit');
+  const to   = document.getElementById('conv-to-unit');
+  from.innerHTML = units.map((u,i) => `<option value="${u}"${i===0?' selected':''}>${u}</option>`).join('');
+  to.innerHTML   = units.map((u,i) => `<option value="${u}"${i===1?' selected':''}>${u}</option>`).join('');
+  convertFromTo();
+}
+
+function tempConvert(val, from, to) {
+  // To Celsius first
+  let c;
+  if (from === '°C') c = val;
+  else if (from === '°F') c = (val - 32) * 5/9;
+  else c = val - 273.15; // K
+  // From Celsius to target
+  if (to === '°C') return c;
+  if (to === '°F') return c * 9/5 + 32;
+  return c + 273.15; // K
+}
+
+function convertFromTo() {
+  if (convUpdating) return;
+  convUpdating = true;
+  const fromUnit = document.getElementById('conv-from-unit').value;
+  const toUnit   = document.getElementById('conv-to-unit').value;
+  const val      = parseFloat(document.getElementById('conv-from-val').value);
+  if (isNaN(val)) { document.getElementById('conv-to-val').value = ''; convUpdating = false; return; }
+
+  let result;
+  if (currentCat === 'temperature') {
+    result = tempConvert(val, fromUnit, toUnit);
+  } else {
+    const tb = CONVERSIONS[currentCat].toBase;
+    result = val * tb[fromUnit] / tb[toUnit];
+  }
+  const fmt = Math.abs(result) >= 1e10 || (Math.abs(result) < 1e-4 && result !== 0)
+    ? result.toExponential(6) : parseFloat(result.toPrecision(10)).toString();
+  document.getElementById('conv-to-val').value = fmt;
+  convUpdating = false;
+}
+
+function convertToFrom() {
+  if (convUpdating) return;
+  convUpdating = true;
+  const fromUnit = document.getElementById('conv-from-unit').value;
+  const toUnit   = document.getElementById('conv-to-unit').value;
+  const val      = parseFloat(document.getElementById('conv-to-val').value);
+  if (isNaN(val)) { document.getElementById('conv-from-val').value = ''; convUpdating = false; return; }
+
+  let result;
+  if (currentCat === 'temperature') {
+    result = tempConvert(val, toUnit, fromUnit);
+  } else {
+    const tb = CONVERSIONS[currentCat].toBase;
+    result = val * tb[toUnit] / tb[fromUnit];
+  }
+  const fmt = Math.abs(result) >= 1e10 || (Math.abs(result) < 1e-4 && result !== 0)
+    ? result.toExponential(6) : parseFloat(result.toPrecision(10)).toString();
+  document.getElementById('conv-from-val').value = fmt;
+  convUpdating = false;
+}
+
+document.getElementById('conv-from-val').addEventListener('input', convertFromTo);
+document.getElementById('conv-to-val').addEventListener('input', convertToFrom);
+document.getElementById('conv-from-unit').addEventListener('change', convertFromTo);
+document.getElementById('conv-to-unit').addEventListener('change', convertFromTo);
+
+document.getElementById('conv-swap').addEventListener('click', () => {
+  const fromUnit = document.getElementById('conv-from-unit');
+  const toUnit   = document.getElementById('conv-to-unit');
+  const fromVal  = document.getElementById('conv-from-val').value;
+  const toVal    = document.getElementById('conv-to-val').value;
+  // Swap units
+  const tmp = fromUnit.value; fromUnit.value = toUnit.value; toUnit.value = tmp;
+  document.getElementById('conv-from-val').value = toVal;
+  document.getElementById('conv-to-val').value = fromVal;
+  convertFromTo();
+  Haptics.light();
+});
+
+document.getElementById('conv-cats').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCat = btn.dataset.cat;
+  populateConvSelects();
+  Haptics.light();
+});
+
+/* ============================================================
+   PWA — Manifest & Service Worker
+   ============================================================ */
+// Inline manifest as data URI
+const manifest = {
+  name: 'Solvr',
+  short_name: 'Solvr',
+  description: 'Calculate everything.',
+  start_url: '/',
+  display: 'standalone',
+  background_color: '#0a0a0f',
+  theme_color: '#6c63ff',
+  icons: [
+    { src: generateIcon(192), sizes: '192x192', type: 'image/png' },
+    { src: generateIcon(512), sizes: '512x512', type: 'image/png' },
+  ],
+};
+
+function generateIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  // Background
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, size, size);
+  // Rounded rect bg
+  const pad = size * 0.12;
+  ctx.fillStyle = '#6c63ff';
+  ctx.beginPath();
+  const r = size * 0.22;
+  ctx.moveTo(pad + r, pad);
+  ctx.lineTo(size - pad - r, pad);
+  ctx.arcTo(size - pad, pad, size - pad, pad + r, r);
+  ctx.lineTo(size - pad, size - pad - r);
+  ctx.arcTo(size - pad, size - pad, size - pad - r, size - pad, r);
+  ctx.lineTo(pad + r, size - pad);
+  ctx.arcTo(pad, size - pad, pad, size - pad - r, r);
+  ctx.lineTo(pad, pad + r);
+  ctx.arcTo(pad, pad, pad + r, pad, r);
+  ctx.closePath();
+  ctx.fill();
+  // "S" text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${size * 0.5}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('S', size / 2, size / 2 + size * 0.02);
+  return canvas.toDataURL('image/png');
+}
+
+// Set manifest link
+const manifestData = encodeURIComponent(JSON.stringify(manifest));
+document.getElementById('manifest-link').href = 'data:application/manifest+json,' + manifestData;
+
+// Register service worker via blob
+const swCode = `
+const CACHE = 'solvr-v1';
+const ASSETS = [
+  '/',
+  'https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/1.9.2/jsxgraphcore.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {})));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+  ));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+`;
+
+try {
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker?.register(swUrl).catch(() => {});
+} catch(e) {}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadState();
+applyTheme(state.theme);
+setAngleMode(state.angleMode);
+document.getElementById('toggle-haptics').classList.toggle('on', state.haptics);
+document.getElementById('toggle-sound').classList.toggle('on', state.sound);
+populateConvSelects();
+renderCore();
+renderBasic();
+calcTip();
+</script>
+</body>
+</html>
