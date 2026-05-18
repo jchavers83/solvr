@@ -219,7 +219,7 @@ select { font-family: 'Outfit', sans-serif; touch-action: manipulation; }
   border-radius: var(--r-panel);
   padding: var(--gap-lg) var(--gap-xl) var(--gap-md);
   margin-bottom: var(--gap-sm);
-  min-height: 128px;
+  min-height: 152px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -230,23 +230,26 @@ select { font-family: 'Outfit', sans-serif; touch-action: manipulation; }
 
 .display-expression {
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: 28px;
   font-weight: 400;
   color: var(--text-secondary);
-  min-height: 20px;
+  min-height: 34px;
   word-break: break-all;
-  line-height: 1.4;
+  line-height: 1.3;
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .display-result {
   font-family: 'Outfit', sans-serif;
-  font-size: 68px;
+  font-size: 72px;
   font-weight: 300;
   color: var(--text-primary);
   text-align: right;
   line-height: 1.05;
-  margin-top: 2px;
+  margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -715,8 +718,9 @@ select { font-family: 'Outfit', sans-serif; touch-action: manipulation; }
 
 @media (min-height: 780px) {
   .calc-btn { height: 76px; }
-  .display-result { font-size: 80px; }
-  .calc-display { min-height: 148px; }
+  .display-result { font-size: 86px; }
+  .display-expression { font-size: 32px; }
+  .calc-display { min-height: 172px; }
 }
 </style>
 </head>
@@ -752,29 +756,29 @@ select { font-family: 'Outfit', sans-serif; touch-action: manipulation; }
         <button class="quick-btn" id="btn-tip-open">🧾 Tip Calc</button>
       </div>
       <div class="calc-grid core-grid" id="core-grid">
-        <button class="calc-btn btn-fn btn-clear" id="core-ac-btn" data-action="AC">AC</button>
-        <button class="calc-btn btn-back" data-action="backspace">⌫</button>
-        <button class="calc-btn btn-fn" data-action="percent">%</button>
-        <button class="calc-btn btn-op" data-action="op" data-val="÷">÷</button>
-
         <button class="calc-btn" data-action="num" data-val="7">7</button>
         <button class="calc-btn" data-action="num" data-val="8">8</button>
         <button class="calc-btn" data-action="num" data-val="9">9</button>
-        <button class="calc-btn btn-op" data-action="op" data-val="×">×</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="÷">÷</button>
 
         <button class="calc-btn" data-action="num" data-val="4">4</button>
         <button class="calc-btn" data-action="num" data-val="5">5</button>
         <button class="calc-btn" data-action="num" data-val="6">6</button>
-        <button class="calc-btn btn-op" data-action="op" data-val="−">−</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="×">×</button>
 
         <button class="calc-btn" data-action="num" data-val="1">1</button>
         <button class="calc-btn" data-action="num" data-val="2">2</button>
         <button class="calc-btn" data-action="num" data-val="3">3</button>
-        <button class="calc-btn btn-op" data-action="op" data-val="+">+</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="−">−</button>
 
         <button class="calc-btn btn-fn" data-action="plus-minus">+/−</button>
         <button class="calc-btn" data-action="num" data-val="0">0</button>
         <button class="calc-btn" data-action="num" data-val=".">.</button>
+        <button class="calc-btn btn-op" data-action="op" data-val="+">+</button>
+
+        <button class="calc-btn btn-fn" data-action="percent">%</button>
+        <button class="calc-btn btn-back" data-action="backspace">⌫</button>
+        <button class="calc-btn btn-fn btn-clear" id="core-ac-btn" data-action="AC">AC</button>
         <button class="calc-btn btn-eq" data-action="equals">=</button>
       </div>
     </div>
@@ -1448,7 +1452,7 @@ function renderCore() {
   const el = document.getElementById('core-result');
   el.textContent = core.result;
   const len = core.result.length;
-  el.style.fontSize = len > 14 ? '24px' : len > 10 ? '42px' : '';
+  el.style.fontSize = len > 16 ? '28px' : len > 12 ? '44px' : len > 9 ? '58px' : '';
   updateAcBtn();
 }
 
@@ -1563,7 +1567,7 @@ function renderBasic() {
   const el = document.getElementById('basic-result');
   el.textContent = basicS.result;
   const len = basicS.result.length;
-  el.style.fontSize = len > 14 ? '22px' : len > 10 ? '38px' : '';
+  el.style.fontSize = len > 16 ? '24px' : len > 12 ? '40px' : len > 9 ? '54px' : '';
 }
 
 function animateResult(tab) {
