@@ -82,9 +82,9 @@ body, .calc-btn, .calc-display, .drawer, .graph-section,
     color var(--dur-theme);
 }
 
-button { font-family: 'Outfit', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
-input  { font-family: 'Outfit', sans-serif; outline: none; border: none; background: none; color: inherit; }
-select { font-family: 'Outfit', sans-serif; }
+button { font-family: 'Outfit', sans-serif; cursor: pointer; border: none; background: none; color: inherit; touch-action: manipulation; }
+input  { font-family: 'Outfit', sans-serif; outline: none; border: none; background: none; color: inherit; touch-action: manipulation; }
+select { font-family: 'Outfit', sans-serif; touch-action: manipulation; }
 
 /* ============================================================
    APP SHELL
@@ -1328,6 +1328,15 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
 /* ============================================================
    FORMAT NUMBER
    ============================================================ */
+// Raw string used inside expressions (no commas — math.js can't parse them)
+function rawNum(n) {
+  if (typeof n !== 'number' || isNaN(n)) return '0';
+  const abs = Math.abs(n);
+  if (abs !== 0 && (abs >= 1e15 || abs < 1e-10)) return n.toExponential(6);
+  return parseFloat(n.toPrecision(12)).toString();
+}
+
+// Display string — adds thousands commas
 function formatNum(n) {
   if (typeof n !== 'number' || isNaN(n)) return 'Invalid';
   if (!isFinite(n)) return n > 0 ? '∞' : '−∞';
@@ -1335,7 +1344,10 @@ function formatNum(n) {
   if (abs !== 0 && (abs >= 1e15 || abs < 1e-10)) {
     return n.toExponential(6).replace('e+','×10^').replace('e-','×10^−').replace('e','×10^');
   }
-  return parseFloat(n.toPrecision(12)).toString();
+  const str = parseFloat(n.toPrecision(12)).toString();
+  const [intPart, decPart] = str.split('.');
+  const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decPart !== undefined ? intFormatted + '.' + decPart : intFormatted;
 }
 
 /* ============================================================
@@ -1413,7 +1425,7 @@ function coreInput(action, val) {
   if (action === 'percent') {
     Haptics.light();
     const r = evalExpr(core.expr || '0', state.angleMode);
-    if (r.ok) { core.expr = formatNum(r.value/100); core.result = core.expr; core.justEvaluated = true; renderCore(); }
+    if (r.ok) { const pv = r.value/100; core.expr = rawNum(pv); core.result = formatNum(pv); core.justEvaluated = true; renderCore(); }
     return;
   }
   if (action === 'equals') {
@@ -1447,7 +1459,7 @@ document.querySelectorAll('[data-mem]').forEach(btn => {
     const op = btn.dataset.mem, cur = parseFloat(core.result) || 0;
     if (op==='M+') { core.memory += cur; core.hasMemory = true; }
     if (op==='M-') { core.memory -= cur; core.hasMemory = core.memory !== 0; }
-    if (op==='MR') { if (core.justEvaluated) core.expr=''; core.expr += formatNum(core.memory); core.justEvaluated = false; renderCore(); }
+    if (op==='MR') { if (core.justEvaluated) core.expr=''; core.expr += rawNum(core.memory); core.justEvaluated = false; renderCore(); }
     if (op==='MC') { core.memory = 0; core.hasMemory = false; }
     document.getElementById('core-mem-dot').classList.toggle('active', core.hasMemory);
   });
@@ -1500,7 +1512,7 @@ function basicInput(action, val) {
   if (action === 'percent') {
     Haptics.light();
     const r = evalExpr(basicS.expr||'0', state.angleMode);
-    if (r.ok) { basicS.expr=formatNum(r.value/100); basicS.result=basicS.expr; basicS.justEvaluated=true; renderBasic(); }
+    if (r.ok) { const pv=r.value/100; basicS.expr=rawNum(pv); basicS.result=formatNum(pv); basicS.justEvaluated=true; renderBasic(); }
     return;
   }
   if (action === 'equals') {
